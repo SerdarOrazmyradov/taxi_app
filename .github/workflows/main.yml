@@ -1,0 +1,44 @@
+name: Build Old Flutter APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Elegi bilen düwme basyp başlatmak üçin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Kodlary GitHub-dan çekip almak
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Köne Gradle üçin hökman JAVA 8 oturtmak
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+
+      # 3. Köne Flutter SDK (meselem 1.22.6 ýa-da 2.2.3) gurmak
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '1.22.6' # Taslamaňyza degişli köne wersiýa
+          channel: 'stable'
+
+      # 4. Dependency-leri ýüklemek (pubget)
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 5. APK Build etmek (Null-safety öçürilen rejimde)
+      - name: Build APK
+        run: flutter build apk --no-sound-null-safety
+
+      # 6. Taýýar bolan APK-ny GitHub-dan ýükläp bolar ýaly saklamak (Artifact)
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
